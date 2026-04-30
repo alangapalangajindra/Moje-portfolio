@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jindřich Sedláček</title>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Jindřich Sedláček</h1>
+    </div>
+
+    <hr>
+
+    <div class="bio">
+        <h2>BIO</h2>
+        <p>Jsem student Pražské konzervatoře u prof. Pavla Vernera</p>
+        <p>Můj život je jinak docela nezajímavej</p>
+        <p>Mám hodně rád dinosaury</p>
+        <p>Mám rád čaj</p>
+    </div>
+
+    <hr>
+
+    <div class="contact-btn">
+    <a href="portfolio/index.html">
+        <button>Kontaktuj mě</button>
+    </a>
+    <div class="Fotečky">
+    <a href="port/index.html">
+        <button>Fotky</button>
+    </a>
+</div>
+    </div>
+    <div class="egg">
+        <img src="vajco.jpg" id="egg" alt="vajíčko">
+    </div>
+</div>
+<script>
+    const egg = document.getElementById("egg");
+
+    egg.addEventListener("click", () => {
+        // přidá třesení
+        egg.classList.add("shake");
+
+        // po 1 sekundě přesměrování
+        setTimeout(() => {
+            window.location.href = "druha-stranka.html";
+        }, 1000);
+    });
+</script>
+
+</body>
+</html>

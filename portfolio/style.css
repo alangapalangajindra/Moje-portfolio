@@ -1,0 +1,93 @@
+/* KONTAKT SEKCE */
+body {
+    font-family: 'Rubik', sans-serif;
+    color: #e8f5e9;
+    line-height: 1.6;
+
+    background:
+        radial-gradient(circle at 30% 20%, rgba(0,255,120,0.2), transparent 45%),
+        radial-gradient(circle at 70% 80%, rgba(0,200,100,0.15), transparent 50%),
+        linear-gradient(to bottom, #163826, #0b1410);
+
+    min-height: 100vh;
+}
+.bio {
+    max-width: 650px;
+    margin: 50px auto;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    backdrop-filter: blur(5px);
+}
+
+/* nadpis v kontaktu */
+.bio h2 {
+    color: #76ff03;
+    margin-bottom: 20px;
+    letter-spacing: 2px;
+}
+
+/* text */
+.bio p {
+    margin-top: 15px;
+    margin-bottom: 8px;
+    opacity: 0.9;
+}
+
+/* TLAČÍTKA (sjednocení) */
+button {
+    background: linear-gradient(135deg, #00c853, #64dd17);
+    border: none;
+    padding: 12px 25px;
+    font-size: 1rem;
+    color: #0b1410;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px #00ff88;
+}
+
+/* ZPĚT TLAČÍTKO */
+.contact-btn {
+    display: flex;
+    justify-content: center;
+    margin: 40px 0;
+}
+
+/* HR (stejný styl jako hlavní stránka) */
+hr {
+    width: 60%;
+    margin: 30px auto;
+    border: none;
+    height: 2px;
+    background: linear-gradient(to right, transparent, #00ff88, transparent);
+}
+.title {
+    text-align: center;
+    font-size: 3rem;
+    color: #b9f6ca;
+    margin-top: 60px;
+    letter-spacing: 2px;
+    text-shadow:
+        0 0 10px #00ff88,
+        0 0 20px #00ff88;
+    animation: glow 2.5s ease-in-out infinite alternate;
+}
+
+/* jemné svícení */
+@keyframes glow {
+    from {
+        text-shadow: 0 0 5px #00ff88;
+    }
+    to {
+        text-shadow: 0 0 15px #00ff88, 0 0 30px #00ff88;
+    }
+}

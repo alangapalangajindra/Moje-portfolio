@@ -1,0 +1,22 @@
+/* GALERIE */
+.gallery {
+    max-width: 900px;
+    margin: 50px auto;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.gallery img {
+    width: 250px;
+    border-radius: 15px;
+    border: 2px solid rgba(0, 255, 136, 0.3);
+    transition: 0.3s;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.2);
+}
+
+.gallery img:hover {
+    transform: scale(1.1) rotate(1deg);
+    box-shadow: 0 0 25px #00ff88;
+}
