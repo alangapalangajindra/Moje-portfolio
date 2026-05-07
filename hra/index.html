@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KRVAVÁ VILA</title>
+    <style>
+        body { margin:0; overflow:hidden; background:#000; font-family: Arial, sans-serif; }
+        canvas { display:block; }
+        #ui { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; color:white; }
+        #crosshair { position:absolute; top:50%; left:50%; font-size:30px; transform:translate(-50%,-50%); pointer-events:none; }
+        #health { position:absolute; top:15px; left:15px; font-size:28px; }
+        #battery { position:absolute; top:15px; right:15px; font-size:24px; }
+        #message { position:absolute; top:40%; left:50%; transform:translate(-50%,-50%); font-size:32px; background:rgba(0,0,0,0.8); padding:20px 40px; border:3px solid #f00; opacity:0; transition:0.4s; text-align:center; }
+        #menu { position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); display:flex; flex-direction:column; align-items:center; justify-content:center; z-index:100; }
+        button { padding:15px 40px; margin:10px; font-size:24px; background:#400; color:white; border:3px solid #f00; cursor:pointer; }
+        button:hover { background:#800; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.134.0/examples/js/controls/PointerLockControls.js"></script>
+</head>
+<body>
+
+<div id="ui">
+    <div id="crosshair">+</div>
+    <div id="health">♥ ♥ ♥</div>
+    <div id="battery">Baterie: <span id="bat">100</span>%</div>
+    <div id="message"></div>
+</div>
+
+<div id="menu">
+    <h1 style="color:#f33; font-size:70px; margin:0;">KRVAVÁ VILA</h1>
+    <button onclick="startGame()">ZAČÍT HRU</button>
+    <button onclick="toggleFullscreen()">FULLSCREEN</button>
+</div>
+
+<script>
+let scene, camera, renderer, controls;
+let move = { forward: false, backward: false, left: false, right: false };
+let flashlight;
+let battery = 100;
+let health = 3;
+let gameRunning = false;
+let monsters = [];
+let doors = [];
+let keys = [];
+
+function init() {
+    scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x111111, 0.015);
+
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 1.8, 10);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.body.appendChild(renderer.domElement);
+
+    controls = new THREE.PointerLockControls(camera, document.body);
+
+    // Osvětlení - viditelné!
+    scene.add(new THREE.AmbientLight(0x444466, 0.6));
+    scene.add(new THREE.HemisphereLight(0x6688aa, 0x112233, 0.5));
+
+    flashlight = new THREE.SpotLight(0xffeecc, 9, 50, Math.PI / 4, 0.7, 2);
+    flashlight.castShadow = true;
+    flashlight.shadow.mapSize.width = 1024;
+    flashlight.shadow.mapSize.height = 1024;
+    camera.add(flashlight);
+    scene.add(camera);
+
+    createMansion();
+    createMonster();
+    createKeyAndDoor();
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    animate();
+}
+
+function createMansion() {
+    // Podlaha
+    const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(60, 60),
+        new THREE.MeshStandardMaterial({ color: 0x2a1a0f, roughness: 0.9 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Stěny
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x3a2a1f });
+    const walls = [
+        [0, 2, -30, 60, 5, 1],   // zadní
+        [0, 2, 30, 60, 5, 1],    // přední
+        [-30, 2, 0, 1, 5, 60],   // levá
+        [30, 2, 0, 1, 5, 60]     // pravá
+    ];
+
+    walls.forEach(w => {
+        const wall = new THREE.Mesh(new THREE.BoxGeometry(w[3], w[4], w[5]), wallMat);
+        wall.position.set(w[0], w[1], w[2]);
+        wall.castShadow = true;
+        wall.receiveShadow = true;
+        scene.add(wall);
+    });
+}
+
+function createMonster() {
+    const monster = new THREE.Mesh(
+        new THREE.BoxGeometry(1.6, 2.8, 1.6),
+        new THREE.MeshStandardMaterial({ color: 0x550000, emissive: 0x330000 })
+    );
+    monster.position.set(15, 1.4, -15);
+    scene.add(monster);
+    monsters.push(monster);
+}
+
+function createKeyAndDoor() {
+    // Klíč
+    const key = new THREE.Mesh(
+        new THREE.BoxGeometry(0.4, 0.15, 0.8),
+        new THREE.MeshStandardMaterial({ color: 0xffdd00, emissive: 0xffff00 })
+    );
+    key.position.set(-10, 1.2, -15);
+    key.userData = { type: 'key' };
+    scene.add(key);
+    keys.push(key);
+
+    // Dveře
+    const door = new THREE.Mesh(
+        new THREE.BoxGeometry(4, 5, 0.5),
+        new THREE.MeshStandardMaterial({ color: 0x2a1a0a })
+    );
+    door.position.set(20, 2.5, -10);
+    door.userData = { type: 'door', locked: true };
+    scene.add(door);
+    doors.push(door);
+}
+
+function onKeyDown(e) {
+    if (!gameRunning) return;
+    switch(e.code) {
+        case 'KeyW': move.forward = true; break;
+        case 'KeyS': move.backward = true; break;
+        case 'KeyA': move.left = true; break;
+        case 'KeyD': move.right = true; break;
+        case 'KeyF': flashlight.intensity = flashlight.intensity > 1 ? 0 : 9; break;
+        case 'KeyE': interact(); break;
+    }
+}
+
+function onKeyUp(e) {
+    switch(e.code) {
+        case 'KeyW': move.forward = false; break;
+        case 'KeyS': move.backward = false; break;
+        case 'KeyA': move.left = false; break;
+        case 'KeyD': move.right = false; break;
+    }
+}
+
+function interact() {
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(0,0), camera);
+    const intersects = raycaster.intersectObjects(scene.children, true);
+
+    if (intersects.length > 0) {
+        const obj = intersects[0].object;
+        if (obj.userData.type === 'key') {
+            showMessage("Sebral jsi klíč!");
+            scene.remove(obj);
+        }
+        if (obj.userData.type === 'door') {
+            if (obj.userData.locked) {
+                showMessage("Dveře jsou zamčené... Potřebuješ klíč");
+            } else {
+                showMessage("Dveře se otevřely!");
+            }
+        }
+    }
+}
+
+function showMessage(text) {
+    const msg = document.getElementById('message');
+    msg.textContent = text;
+    msg.style.opacity = 1;
+    setTimeout(() => msg.style.opacity = 0, 2500);
+}
+
+function startGame() {
+    document.getElementById('menu').style.display = 'none';
+    gameRunning = true;
+    controls.lock();
+    batteryDrain();
+    monsterAI();
+}
+
+function batteryDrain() {
+    if (!gameRunning) return;
+    battery -= 0.1;
+    document.getElementById('bat').textContent = Math.floor(battery);
+    if (battery < 20) flashlight.intensity = 3;
+    if (battery <= 0) flashlight.intensity = 0;
+    setTimeout(batteryDrain, 600);
+}
+
+function monsterAI() {
+    if (!gameRunning) return;
+    monsters.forEach(m => {
+        const dir = camera.position.clone().sub(m.position).normalize();
+        m.position.addScaledVector(dir, 0.08);
+
+        if (camera.position.distanceTo(m.position) < 3) {
+            health--;
+            document.getElementById('health').textContent = '♥ '.repeat(health);
+            if (health <= 0) {
+                alert("GAME OVER - Příšera tě dostala!");
+                location.reload();
+            }
+        }
+    });
+    setTimeout(monsterAI, 30);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    if (gameRunning && controls.isLocked) {
+        const speed = 0.25;
+        if (move.forward) controls.moveForward(speed);
+        if (move.backward) controls.moveForward(-speed * 0.7);
+        if (move.left) controls.moveRight(-speed);
+        if (move.right) controls.moveRight(speed);
+    }
+
+    renderer.render(scene, camera);
+}
+
+function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
